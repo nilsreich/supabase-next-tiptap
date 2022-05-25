@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { ChevronDownIcon, PlusIcon } from "@radix-ui/react-icons";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 export default function Account({ session }) {
   const [mail, setMail] = useState("");
@@ -14,6 +16,17 @@ export default function Account({ session }) {
   const [sessionTitle, setSessionTitle] = useState(null);
   const [editorcontent, setEditorContent] = useState("a");
 
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: editorcontent,
+    editorProps: {
+      attributes: {
+        class:
+          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl m-5 focus:outline-none dark:prose-invert",
+      },
+    },
+  });
+
   const toggleKlasse = (classes_id) => {
     setActive(classes_id);
     getSession(classes_id);
@@ -23,6 +36,8 @@ export default function Account({ session }) {
     setActive(session_id);
     let temp = content.find(({ id }) => id === session_id);
     setEditorContent(temp.content);
+
+    editor.commands.setContent(temp.content);
   };
 
   async function getSession(classes_id) {
@@ -154,7 +169,9 @@ export default function Account({ session }) {
               ))
             : null}
         </div>{" "}
-        <div className="flex-1 p-6">{editorcontent}3</div>
+        <div className="flex-1 p-6">
+          <EditorContent editor={editor} />
+        </div>
       </div>
       <div className="flex justify-between border-t border-neutral-800">
         <div className="bg-blue-600 px-2 py-1 text-neutral-50">{mail}</div>
