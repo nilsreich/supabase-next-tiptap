@@ -10,28 +10,38 @@ export default function Account({ session }) {
   const [website, setWebsite] = useState(null);
   const [avatar_url, setAvatarUrl] = useState(null);
   const [isActive, setActive] = useState(0);
+  const [content, setContent] = useState([]);
+  const [sessionTitle, setSessionTitle] = useState(null);
+  const [editorcontent, setEditorContent] = useState("a");
 
-  const toggleKlasse = (key) => {
-    setActive(key);
-    getSession()
+  const toggleKlasse = (classes_id) => {
+    setActive(classes_id);
+    getSession(classes_id);
   };
 
-  async function getSession() {
+  const openSession = (session_id) => {
+    setActive(session_id);
+    let temp = content.find(({ id }) => id === session_id);
+    setEditorContent(temp.content);
+  };
+
+  async function getSession(classes_id) {
     try {
       setLoading(true);
 
       const user = supabase.auth.user();
       let { data, error, status } = await supabase
-        .from("session")
-        .select(`content`)
+        .from("sessions")
+        .select(`id, title, content`)
         .eq("author", user.id)
-        .eq("klasse", "FSH21a");
+        .eq("class", classes_id);
       if (error && status !== 406) {
         throw error;
       }
 
       if (data) {
-        console.log(data);
+        setContent(data);
+        console.log(data[0].id);
       }
     } catch (error) {
       alert(error.message);
@@ -50,8 +60,8 @@ export default function Account({ session }) {
       const user = supabase.auth.user();
       setMail(user.email);
       let { data, error, status } = await supabase
-        .from("klassen")
-        .select(`name`)
+        .from("classes")
+        .select(`id,name`)
         .eq("author", user.id);
       if (error && status !== 406) {
         throw error;
@@ -103,15 +113,15 @@ export default function Account({ session }) {
             <PlusIcon />
           </div>
           {klassen != null
-            ? klassen.map((klasse, index) => (
+            ? klassen.map((klasse) => (
                 <div
-                  onClick={() => toggleKlasse(index)}
+                  onClick={() => toggleKlasse(klasse.id)}
                   className={
-                    isActive === index
+                    isActive === klasse.id
                       ? "border-l-2 border-white text-white p-4 text-sm"
                       : "border-l-2 border-black text-neutral-500 p-4 text-sm hover:text-white"
                   }
-                  key={index}
+                  key={klasse.id}
                 >
                   {klasse.name}
                 </div>
@@ -128,11 +138,23 @@ export default function Account({ session }) {
               <PlusIcon />
             </div>
           </div>
-          <div className="py-2 pl-8 truncate text-neutral-500 hover:bg-neutral-900 text-sm ">
-            Lineare Funktionen
-          </div>
+          {content != null
+            ? content.map((item) => (
+                <div
+                  onClick={() => openSession(item.id)}
+                  className={
+                    isActive === item.id
+                      ? "py-2 pl-8 truncate text-neutral-500 bg-neutral-900 text-sm "
+                      : "py-2 pl-8 truncate text-neutral-500 hover:bg-neutral-900 text-sm"
+                  }
+                  key={item.id}
+                >
+                  {item.title}
+                </div>
+              ))
+            : null}
         </div>{" "}
-        <div className="flex-1 p-6">Editor</div>
+        <div className="flex-1 p-6">{editorcontent}3</div>
       </div>
       <div className="flex justify-between border-t border-neutral-800">
         <div className="bg-blue-600 px-2 py-1 text-neutral-50">{mail}</div>
